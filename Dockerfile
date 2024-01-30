@@ -22,12 +22,12 @@ RUN rustup toolchain install stable --component rustfmt --allow-downgrade
 WORKDIR /opt/lightningd
 
 # htlc interceptor
-RUN git clone -b intercept-onion --single-branch https://github.com/stakwork/fedimint.git /tmp/fedimint
-RUN cargo build --release --manifest-path=/tmp/fedimint/Cargo.toml --bin gateway-cln-extension
+RUN git clone -b intercept-onion-3 --single-branch https://github.com/stakwork/fedimint.git /tmp/fedimint
+RUN cargo build --release --manifest-path /tmp/fedimint/Cargo.toml --config /tmp/fedimint/.cargo/config.toml --bin gateway-cln-extension
 
 # hsmd broker
 RUN git clone https://github.com/stakwork/sphinx-key /tmp/sphinx-key
-RUN cargo build --release --manifest-path=/tmp/sphinx-key/broker/Cargo.toml
+RUN cargo build --release --manifest-path /tmp/sphinx-key/broker/Cargo.toml
 
 FROM elementsproject/lightningd:v23.08.1
 
