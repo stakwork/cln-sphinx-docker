@@ -1,5 +1,5 @@
 # FROM debian:bullseye-slim as builder
-FROM debian:11-slim as builder
+FROM debian:12-slim as builder
 
 RUN apt-get update -qq && \
     apt-get install -qq -y --no-install-recommends \
@@ -23,7 +23,7 @@ RUN rustup toolchain install stable --component rustfmt --allow-downgrade
 WORKDIR /opt/lightningd
 
 # htlc interceptor
-RUN git clone -b intercept-onion-3 --single-branch https://github.com/stakwork/fedimint.git /tmp/fedimint
+RUN git clone -b intercept-onion-3-plugin --single-branch https://github.com/stakwork/fedimint.git /tmp/fedimint
 RUN cargo build --release --manifest-path /tmp/fedimint/Cargo.toml --config /tmp/fedimint/.cargo/config.toml --bin gateway-cln-extension
 
 # hsmd broker
@@ -31,7 +31,8 @@ RUN git clone https://github.com/stakwork/sphinx-key /tmp/sphinx-key
 RUN cargo build --release --manifest-path /tmp/sphinx-key/broker/Cargo.toml
 
 # FROM elementsproject/lightningd:v23.08.1
-FROM elementsproject/lightningd:v24.02-amd64
+# FROM elementsproject/lightningd:v24.02-amd64
+FROM sphinxlightning/cln:fix-gossip
 
 COPY --from=builder /tmp/fedimint/target/release/gateway-cln-extension /usr/local/libexec/c-lightning/plugins/gateway-cln-extension
 
