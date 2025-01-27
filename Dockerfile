@@ -32,7 +32,8 @@ RUN cargo build --release --manifest-path /tmp/sphinx-key/broker/Cargo.toml
 
 # FROM elementsproject/lightningd:v23.08.1
 # FROM elementsproject/lightningd:v24.02-amd64
-FROM sphinxlightning/cln:latest
+# FROM sphinxlightning/cln:latest
+FROM sphinxlightning/cln:v24.11.1
 
 COPY --from=builder /tmp/fedimint/target/release/gateway-cln-extension /usr/local/libexec/c-lightning/plugins/gateway-cln-extension
 
