@@ -33,5 +33,5 @@ docker tag cln sphinxlightning/cln:v24.11.1
 docker push sphinxlightning/cln:v24.11.1
 
 docker build --no-cache -t cln .
-docker tag clnn sphinxlightning/cln:latest
+docker tag cln sphinxlightning/cln:latest
 docker push sphinxlightning/cln:latest
