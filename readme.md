@@ -1,37 +1,67 @@
 # cln-sphinx
 
-Core Lightning + VLS MQTT broker + HTLC interceptor
+Core Lightning + the Sphinx HTLC interceptor plugin (`gateway-cln-extension`).
 
-# build
+This is the image sphinx-swarm runs as the `cln` container. Since 0.4.0 it
+is published to **`ghcr.io/stakwork/cln-sphinx`** by GitHub Actions and is
+built directly on the official `elementsproject/lightningd` image, pinned by
+digest. CLN is not compiled here any more; only the interceptor plugin is.
+The old Docker Hub image `sphinxlightning/cln-sphinx`, the
+`sphinxlightning/cln` intermediate image, and the `stakwork/lightning` fork
+are no longer used.
 
-docker build --no-cache -t cln-sphinx .
+Background and the full upgrade procedure:
+`docs/cln-upgrade.md` in the stakwork/sphinx repo.
 
-docker tag cln-sphinx sphinxlightning/cln-sphinx:0.3.7
+## Publish
 
-docker push sphinxlightning/cln-sphinx:0.3.7
+Everything is driven by GitHub releases (`.github/workflows/publish.yml`):
 
-docker tag cln-sphinx sphinxlightning/cln-sphinx:latest
+1. Update `CLN_IMAGE` at the top of the Dockerfile (tag **and** digest from
+   https://github.com/ElementsProject/lightning/releases).
+2. Push to master.
+3. Publish a GitHub **pre-release** with the new version as the tag, e.g. `0.4.0`.
+   CI builds amd64 + arm64 and pushes `ghcr.io/stakwork/cln-sphinx:0.4.0`.
+4. Run it on a staging swarm (set `version: "0.4.0"` on the cln node in that
+   swarm's `vol/<project>/config.yaml` and restart).
+5. When it is good, edit the release and untick "pre-release". Republishing
+   as a full release pushes the same build as `:latest`, which is what swarm
+   hosts pull via `scripts/update.sh cln`.
 
-docker push sphinxlightning/cln-sphinx:latest
+**First publish only:** GHCR creates the package as private. Swarm hosts
+pull anonymously, so after the first workflow run set the package visibility
+to public under the org's package settings.
 
-# update sphinxlightning/cln:latest
+If republishing does not retrigger the workflow, create a new release with
+the same tag after deleting the old one, or run the `latest` retag by hand:
 
-### stakwork/lightning repo
+```
+docker buildx imagetools create -t ghcr.io/stakwork/cln-sphinx:latest ghcr.io/stakwork/cln-sphinx:0.4.0
+```
 
-sync branch to CLN master
+## Local build (optional)
 
-find the commit of the latest CLN release
+```
+docker buildx build --platform linux/amd64 --load -t cln-sphinx .
+docker run --rm --platform linux/amd64 --entrypoint lightningd cln-sphinx --version
+```
 
-fa103238479afe5e984674d15175a867572bb4dd
+The plugin compile is a large Rust build; on Apple silicon it runs under
+emulation and is slow. Prefer CI.
 
-git checkout -b v24.11.1 fa103238479afe5e984674d15175a867572bb4dd
+## Components
 
-apply these changes to the dockerfile: https://github.com/stakwork/lightning/commit/e7fd37bff2294619da2e1345846a66f67a1da6cf
+| Piece | Source | Notes |
+|---|---|---|
+| lightningd, cln-grpc, all stock plugins | official image | assembled by upstream from signed release tarballs |
+| `gateway-cln-extension` | https://github.com/stakwork/fedimint branch `intercept-onion-4` | fedimint's gateway plugin patched to intercept every HTLC and forward the raw onion; the mixer connects on grpc port + 200 |
 
-docker build --no-cache -t cln .
-docker tag cln sphinxlightning/cln:v24.11.1
-docker push sphinxlightning/cln:v24.11.1
+The Rust toolchain for the plugin is pinned (`RUST_VERSION` build arg)
+because the fedimint branch is from April 2024.
 
-docker build --no-cache -t cln .
-docker tag cln sphinxlightning/cln:latest
-docker push sphinxlightning/cln:latest
+## Version history
+
+| cln-sphinx | CLN | base | registry |
+|---|---|---|---|
+| 0.4.0 | v26.06.7 | `elementsproject/lightningd:v26.06.7` (digest pinned) | ghcr.io/stakwork/cln-sphinx |
+| 0.3.7 | v24.11.1 | `sphinxlightning/cln:v24.11.1` (own build of the stakwork/lightning fork) | docker.io/sphinxlightning/cln-sphinx |
