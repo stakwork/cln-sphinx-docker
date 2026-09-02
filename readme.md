@@ -20,9 +20,9 @@ Everything is driven by GitHub releases (`.github/workflows/publish.yml`):
 1. Update `CLN_IMAGE` at the top of the Dockerfile (tag **and** digest from
    https://github.com/ElementsProject/lightning/releases).
 2. Push to master.
-3. Publish a GitHub **pre-release** with the new version as the tag, e.g. `0.4.0`.
-   CI builds amd64 + arm64 and pushes `ghcr.io/stakwork/cln-sphinx:0.4.0`.
-4. Run it on a staging swarm (set `version: "0.4.0"` on the cln node in that
+3. Publish a GitHub **pre-release** with the new version as the tag, e.g. `v0.4.0`.
+   CI builds amd64 + arm64 and pushes `ghcr.io/stakwork/cln-sphinx:v0.4.0`.
+4. Run it on a staging swarm (set `version: "v0.4.0"` on the cln node in that
    swarm's `vol/<project>/config.yaml` and restart).
 5. When it is good, edit the release and untick "pre-release". Republishing
    as a full release pushes the same build as `:latest`, which is what swarm
@@ -36,7 +36,7 @@ If republishing does not retrigger the workflow, create a new release with
 the same tag after deleting the old one, or run the `latest` retag by hand:
 
 ```
-docker buildx imagetools create -t ghcr.io/stakwork/cln-sphinx:latest ghcr.io/stakwork/cln-sphinx:0.4.0
+docker buildx imagetools create -t ghcr.io/stakwork/cln-sphinx:latest ghcr.io/stakwork/cln-sphinx:v0.4.0
 ```
 
 ## Local build (optional)
@@ -63,5 +63,5 @@ because the fedimint branch is from April 2024.
 
 | cln-sphinx | CLN | base | registry |
 |---|---|---|---|
-| 0.4.0 | v26.06.7 | `elementsproject/lightningd:v26.06.7` (digest pinned) | ghcr.io/stakwork/cln-sphinx |
+| v0.4.0 | v26.06.7 | `elementsproject/lightningd:v26.06.7` (digest pinned) | ghcr.io/stakwork/cln-sphinx |
 | 0.3.7 | v24.11.1 | `sphinxlightning/cln:v24.11.1` (own build of the stakwork/lightning fork) | docker.io/sphinxlightning/cln-sphinx |
